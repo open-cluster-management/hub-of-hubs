@@ -51,12 +51,6 @@ spec:
           initialDelaySeconds: 5
           timeoutSeconds: 1
         resources:
-        {{- if .Resources.Limits }}
-          limits:
-            {{- range $key, $value := .Resources.Limits }}
-            {{$key}}: {{.ToUnstructured}}
-            {{- end }}
-        {{- end }}
         {{- if .Resources.Requests }}
           requests:
             {{- range $key, $value := .Resources.Requests }}

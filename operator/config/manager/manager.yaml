@@ -77,10 +77,6 @@ spec:
         # TODO(user): Configure the resources accordingly based on the project requirements.
         # More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
         resources:
-          limits:
-            # cpu: 50m
-            # https://home.robusta.dev/blog/stop-using-cpu-limits
-            memory: 200Mi
           requests:
             cpu: 1m
             memory: 100Mi

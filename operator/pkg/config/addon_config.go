@@ -128,9 +128,6 @@ type ManifestsConfig struct {
 }
 
 type Resources struct {
-	// Limits corresponds to the JSON schema field "limits".
-	Limits *apiextensions.JSON `json:"limits,omitempty"`
-
 	// Requests corresponds to the JSON schema field "requests".
 	Requests *apiextensions.JSON `json:"requests,omitempty"`
 }

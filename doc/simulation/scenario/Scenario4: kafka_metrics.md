@@ -57,8 +57,6 @@
         ...
         replicas: 3
         resources:
-          limits:
-            memory: 4Gi
           requests:
             cpu: 25m
             memory: 128Mi

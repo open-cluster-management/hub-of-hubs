@@ -276,27 +276,21 @@ groups:
 
 func Test_GetResources(t *testing.T) {
 	customCPURequest := "1m"
-	customCPULimit := "2m"
 	customMemoryRequest := "1Mi"
-	customMemoryLimit := "2Mi"
 
 	tests := []struct {
 		name          string
 		component     string
 		advanced      func(resReq *v1alpha4.ResourceRequirements) *v1alpha4.AdvancedSpec
 		cpuRequest    string
-		cpuLimit      string
 		memoryRequest string
-		memoryLimit   string
 		custom        bool
 	}{
 		{
 			name:          "Test Grafana with default values",
 			component:     constants.Grafana,
 			cpuRequest:    constants.GrafanaCPURequest,
-			cpuLimit:      constants.GrafanaCPULimit,
 			memoryRequest: constants.GrafanaMemoryRequest,
-			memoryLimit:   constants.GrafanaMemoryLimit,
 		},
 		{
 			name:      "Test Grafana with customized values",
@@ -314,9 +308,7 @@ func Test_GetResources(t *testing.T) {
 			name:          "Test Postgres with default values",
 			component:     constants.Postgres,
 			cpuRequest:    constants.PostgresCPURequest,
-			cpuLimit:      "0",
 			memoryRequest: constants.PostgresMemoryRequest,
-			memoryLimit:   constants.PostgresMemoryLimit,
 		},
 		{
 			name:      "Test Postgres with customized values",
@@ -334,9 +326,7 @@ func Test_GetResources(t *testing.T) {
 			name:          "Test Agent with default values",
 			component:     constants.Agent,
 			cpuRequest:    constants.AgentCPURequest,
-			cpuLimit:      "0",
 			memoryRequest: constants.AgentMemoryRequest,
-			memoryLimit:   constants.AgentMemoryLimit,
 		},
 		{
 			name:      "Test Agent with customized values",
@@ -354,9 +344,7 @@ func Test_GetResources(t *testing.T) {
 			name:          "Test Manager with default values",
 			component:     constants.Manager,
 			cpuRequest:    constants.ManagerCPURequest,
-			cpuLimit:      "0",
 			memoryRequest: constants.ManagerMemoryRequest,
-			memoryLimit:   constants.ManagerMemoryLimit,
 		},
 		{
 			name:      "Test Manager with customized values",
@@ -374,9 +362,7 @@ func Test_GetResources(t *testing.T) {
 			name:          "Test Kafka with default values",
 			component:     constants.Kafka,
 			cpuRequest:    constants.KafkaCPURequest,
-			cpuLimit:      "0",
 			memoryRequest: constants.KafkaMemoryRequest,
-			memoryLimit:   constants.KafkaMemoryLimit,
 		},
 		{
 			name:      "Test Kafka with customized values",
@@ -393,10 +379,6 @@ func Test_GetResources(t *testing.T) {
 	}
 
 	resReq := &v1alpha4.ResourceRequirements{
-		Limits: corev1.ResourceList{
-			corev1.ResourceName(corev1.ResourceCPU):    resource.MustParse(customCPULimit),
-			corev1.ResourceName(corev1.ResourceMemory): resource.MustParse(customMemoryLimit),
-		},
 		Requests: corev1.ResourceList{
 			corev1.ResourceName(corev1.ResourceMemory): resource.MustParse(customMemoryRequest),
 			corev1.ResourceName(corev1.ResourceCPU):    resource.MustParse(customCPURequest),
@@ -409,17 +391,10 @@ func Test_GetResources(t *testing.T) {
 			if tt.custom {
 				advanced = tt.advanced(resReq)
 				tt.cpuRequest = customCPURequest
-				tt.cpuLimit = customCPULimit
-				tt.memoryLimit = customMemoryLimit
 				tt.memoryRequest = customMemoryRequest
 			}
 			res := GetResources(tt.component, advanced)
-			if res.Limits.Cpu().String() != tt.cpuLimit {
-				t.Errorf("expect cpu: %v, actual cpu: %v", tt.cpuLimit, res.Limits.Cpu().String())
-			}
-			if res.Limits.Memory().String() != tt.memoryLimit {
-				t.Errorf("expect memory: %v, actual memory: %v", tt.memoryLimit, res.Limits.Memory().String())
-			}
+
 			if res.Requests.Memory().String() != tt.memoryRequest {
 				t.Errorf("expect memory: %v, actual memory: %v", tt.memoryRequest, res.Requests.Memory().String())
 			}

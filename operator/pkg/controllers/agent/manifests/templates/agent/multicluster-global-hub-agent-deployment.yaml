@@ -21,12 +21,6 @@ spec:
         - name: multicluster-global-hub-agent
           image: {{ .HoHAgentImage }}
           resources:
-          {{- if .Resources.Limits }}
-            limits:
-              {{- range $key, $value := .Resources.Limits }}
-              {{$key}}: {{$value}}
-              {{- end }}
-          {{- end }}
           {{- if .Resources.Requests }}
             requests:
               {{- range $key, $value := .Resources.Requests }}

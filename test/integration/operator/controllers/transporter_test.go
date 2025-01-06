@@ -244,16 +244,10 @@ var _ = Describe("transporter", Ordered, func() {
 		)
 
 		customCPURequest := "1m"
-		customCPULimit := "2m"
 		customMemoryRequest := "1Mi"
-		customMemoryLimit := "2Mi"
 		mgh.Spec.AdvancedSpec = &v1alpha4.AdvancedSpec{
 			Kafka: &v1alpha4.CommonSpec{
 				Resources: &v1alpha4.ResourceRequirements{
-					Limits: corev1.ResourceList{
-						corev1.ResourceName(corev1.ResourceCPU):    resource.MustParse(customCPULimit),
-						corev1.ResourceName(corev1.ResourceMemory): resource.MustParse(customMemoryLimit),
-					},
 					Requests: corev1.ResourceList{
 						corev1.ResourceName(corev1.ResourceMemory): resource.MustParse(customMemoryRequest),
 						corev1.ResourceName(corev1.ResourceCPU):    resource.MustParse(customCPURequest),
@@ -321,7 +315,6 @@ var _ = Describe("transporter", Ordered, func() {
 		Expect(kafka.Spec.Kafka.Template.Pod.ImagePullSecrets).NotTo(BeEmpty())
 
 		Expect(string(kafka.Spec.Kafka.Resources.Requests.Raw)).To(Equal(`{"cpu":"1m","memory":"1Mi"}`))
-		Expect(string(kafka.Spec.Kafka.Resources.Limits.Raw)).To(Equal(`{"cpu":"2m","memory":"2Mi"}`))
 
 		Expect(kafka.Spec.EntityOperator.Template.Pod.Affinity.NodeAffinity).NotTo(BeNil())
 		Expect(kafka.Spec.EntityOperator.Template.Pod.Tolerations).NotTo(BeEmpty())

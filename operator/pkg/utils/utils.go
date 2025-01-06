@@ -283,68 +283,54 @@ func GetReadyMulticlusterGlobalHub(ctx context.Context, client client.Client) (*
 func GetResources(component string, advanced *v1alpha4.AdvancedSpec) *corev1.ResourceRequirements {
 	resourceReq := corev1.ResourceRequirements{}
 	requests := corev1.ResourceList{}
-	limits := corev1.ResourceList{}
 
 	switch component {
 	case operatorconstants.Grafana:
 		requests[corev1.ResourceName(corev1.ResourceMemory)] = resource.MustParse(operatorconstants.GrafanaMemoryRequest)
 		requests[corev1.ResourceName(corev1.ResourceCPU)] = resource.MustParse(operatorconstants.GrafanaCPURequest)
-		limits[corev1.ResourceName(corev1.ResourceMemory)] = resource.MustParse(operatorconstants.GrafanaMemoryLimit)
-		limits[corev1.ResourceName(corev1.ResourceCPU)] = resource.MustParse(operatorconstants.GrafanaCPULimit)
 		if advanced != nil && advanced.Grafana != nil {
-			setResourcesFromCR(advanced.Grafana.Resources, requests, limits)
+			setResourcesFromCR(advanced.Grafana.Resources, requests)
 		}
 
 	case operatorconstants.Postgres:
 		requests[corev1.ResourceName(corev1.ResourceMemory)] = resource.MustParse(operatorconstants.PostgresMemoryRequest)
 		requests[corev1.ResourceName(corev1.ResourceCPU)] = resource.MustParse(operatorconstants.PostgresCPURequest)
-		limits[corev1.ResourceName(corev1.ResourceMemory)] = resource.MustParse(operatorconstants.PostgresMemoryLimit)
 		if advanced != nil && advanced.Postgres != nil {
-			setResourcesFromCR(advanced.Postgres.Resources, requests, limits)
+			setResourcesFromCR(advanced.Postgres.Resources, requests)
 		}
 
 	case operatorconstants.Manager:
 		requests[corev1.ResourceName(corev1.ResourceMemory)] = resource.MustParse(operatorconstants.ManagerMemoryRequest)
 		requests[corev1.ResourceName(corev1.ResourceCPU)] = resource.MustParse(operatorconstants.ManagerCPURequest)
-		limits[corev1.ResourceName(corev1.ResourceMemory)] = resource.MustParse(operatorconstants.ManagerMemoryLimit)
 		if advanced != nil && advanced.Manager != nil {
-			setResourcesFromCR(advanced.Manager.Resources, requests, limits)
+			setResourcesFromCR(advanced.Manager.Resources, requests)
 		}
 	case operatorconstants.Agent:
 		requests[corev1.ResourceName(corev1.ResourceMemory)] = resource.MustParse(operatorconstants.AgentMemoryRequest)
 		requests[corev1.ResourceName(corev1.ResourceCPU)] = resource.MustParse(operatorconstants.AgentCPURequest)
-		limits[corev1.ResourceName(corev1.ResourceMemory)] = resource.MustParse(operatorconstants.AgentMemoryLimit)
 		if advanced != nil && advanced.Agent != nil {
-			setResourcesFromCR(advanced.Agent.Resources, requests, limits)
+			setResourcesFromCR(advanced.Agent.Resources, requests)
 		}
 	case operatorconstants.Kafka:
 		requests[corev1.ResourceName(corev1.ResourceMemory)] = resource.MustParse(operatorconstants.KafkaMemoryRequest)
 		requests[corev1.ResourceName(corev1.ResourceCPU)] = resource.MustParse(operatorconstants.KafkaCPURequest)
-		limits[corev1.ResourceName(corev1.ResourceMemory)] = resource.MustParse(operatorconstants.KafkaMemoryLimit)
 		if advanced != nil && advanced.Kafka != nil {
-			setResourcesFromCR(advanced.Kafka.Resources, requests, limits)
+			setResourcesFromCR(advanced.Kafka.Resources, requests)
 		}
 	}
 
-	resourceReq.Limits = limits
 	resourceReq.Requests = requests
 
 	return &resourceReq
 }
 
-func setResourcesFromCR(res *v1alpha4.ResourceRequirements, requests, limits corev1.ResourceList) {
+func setResourcesFromCR(res *v1alpha4.ResourceRequirements, requests corev1.ResourceList) {
 	if res != nil {
 		if res.Requests.Memory().String() != "0" {
 			requests[corev1.ResourceName(corev1.ResourceMemory)] = resource.MustParse(res.Requests.Memory().String())
 		}
 		if res.Requests.Cpu().String() != "0" {
 			requests[corev1.ResourceName(corev1.ResourceCPU)] = resource.MustParse(res.Requests.Cpu().String())
-		}
-		if res.Limits.Memory().String() != "0" {
-			limits[corev1.ResourceName(corev1.ResourceMemory)] = resource.MustParse(res.Limits.Memory().String())
-		}
-		if res.Limits.Cpu().String() != "0" {
-			limits[corev1.ResourceName(corev1.ResourceCPU)] = resource.MustParse(res.Limits.Cpu().String())
 		}
 	}
 }

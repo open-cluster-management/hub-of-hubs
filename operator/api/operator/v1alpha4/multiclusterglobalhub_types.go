@@ -140,10 +140,6 @@ type CommonSpec struct {
 // ResourceRequirements copied from corev1.ResourceRequirements
 // We do not need to support ResourceClaim
 type ResourceRequirements struct {
-	// Limits describes the maximum amount of compute resources allowed.
-	// For more information, see: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-	// +optional
-	Limits corev1.ResourceList `json:"limits,omitempty"`
 	// Requests describes the minimum amount of compute resources required.
 	// If requests are omitted for a container, it defaults to the specified limits.
 	// If there are no specified limits, it defaults to an implementation-defined value.
