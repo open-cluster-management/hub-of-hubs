@@ -4,3 +4,6 @@ resources:
 - servicemonitors.crd.yaml
 - operatorgroups.crd.yaml
 - subscriptions.crd.yaml
+
+# Adds namespace to all resources.
+namespace: multicluster-global-hub

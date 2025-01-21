@@ -18,6 +18,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/klog"
+	"sigs.k8s.io/kustomize/api/filters/namespace"
 	"sigs.k8s.io/kustomize/api/krusty"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/yaml"
@@ -27,6 +28,7 @@ import (
 type RenderOptions struct {
 	KustomizationPath string
 	OutputPath        string
+	Namespace         string
 }
 
 // Render is used to render the kustomization
@@ -34,6 +36,12 @@ func Render(o RenderOptions) ([]byte, error) {
 	fSys := filesys.MakeFsOnDisk()
 	k := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
 	m, err := k.Run(fSys, o.KustomizationPath)
+	if err != nil {
+		return nil, err
+	}
+	err = m.ApplyFilter(namespace.Filter{
+		Namespace: o.Namespace,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -59,10 +67,18 @@ func Apply(testClients TestClient, testOptions Options, o RenderOptions) error {
 	}
 	yamls := strings.Split(string(bytes), "---\n")
 	// yamlFiles is an []string
-	for _, f := range yamls {
-		if len(strings.TrimSpace(f)) == 0 {
+	for _, tf := range yamls {
+		if len(strings.TrimSpace(tf)) == 0 {
 			continue
 		}
+		klog.Errorf("###########:%v", tf)
+
+		targetNs := fmt.Sprintf("namespace: %s", testOptions.GlobalHub.Namespace)
+		targetOperatorGroupNs := fmt.Sprintf("- %s\n", testOptions.GlobalHub.Namespace)
+		of := strings.ReplaceAll(tf, "namespace: multicluster-global-hub", targetNs)
+		f := strings.ReplaceAll(of, "- multicluster-global-hub\n", targetOperatorGroupNs)
+		klog.Errorf("###########:%v", testOptions.GlobalHub.Namespace)
+		klog.Errorf("###########:%v", f)
 
 		obj := &unstructured.Unstructured{}
 		err := yaml.Unmarshal([]byte(f), obj)
@@ -70,7 +86,6 @@ func Apply(testClients TestClient, testOptions Options, o RenderOptions) error {
 			klog.V(6).Infof("unmarshal %v is wrong", f)
 			return err
 		}
-
 		var kind string
 		if v, ok := obj.Object["kind"]; !ok {
 			return fmt.Errorf("kind attribute not found in %s", f)
