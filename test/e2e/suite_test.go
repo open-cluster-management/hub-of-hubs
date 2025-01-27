@@ -41,7 +41,6 @@ import (
 	"github.com/stolostron/multicluster-global-hub/operator/pkg/constants"
 	"github.com/stolostron/multicluster-global-hub/operator/pkg/controllers/storage"
 	"github.com/stolostron/multicluster-global-hub/pkg/database"
-	commonutils "github.com/stolostron/multicluster-global-hub/pkg/utils"
 	"github.com/stolostron/multicluster-global-hub/test/e2e/utils"
 )
 
@@ -74,7 +73,6 @@ var (
 const (
 	ExpectedMH              = 2
 	ExpectedMC              = 1
-	GlobalhubNamespace      = "multicluster-global-hub"
 	MghName                 = "multiclusterglobalhub"
 	ServiceMonitorNamespace = "openshift-monitoring"
 )
@@ -120,7 +118,6 @@ var _ = BeforeSuite(func() {
 	healthy, err := testClients.KubeClient().Discovery().RESTClient().Get().AbsPath("/healthz").DoRaw(ctx)
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(string(healthy)).To(Equal("ok"))
-
 	By("Deploy the global hub")
 	deployGlobalHub()
 
@@ -280,26 +277,26 @@ func deployGlobalHub() {
 
 	By("Creating namespace for the multicluster global hub")
 	_, err = testClients.KubeClient().CoreV1().Namespaces().Get(ctx,
-		commonutils.GetDefaultNamespace(), metav1.GetOptions{})
+		testOptions.GlobalHub.Namespace, metav1.GetOptions{})
 	if err != nil && errors.IsNotFound(err) {
 		_, err = testClients.KubeClient().CoreV1().Namespaces().Create(ctx, &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: commonutils.GetDefaultNamespace(),
+				Name: testOptions.GlobalHub.Namespace,
 			},
 		}, metav1.CreateOptions{})
 	}
 	Expect(err).NotTo(HaveOccurred())
 
 	Expect(utils.Apply(testClients, testOptions,
-		utils.RenderOptions{KustomizationPath: fmt.Sprintf("%s/test/manifest/resources", rootDir)})).NotTo(HaveOccurred())
+		utils.RenderOptions{Namespace: testOptions.GlobalHub.Namespace, KustomizationPath: fmt.Sprintf("%s/test/manifest/resources", rootDir)})).NotTo(HaveOccurred())
 	Expect(utils.Apply(testClients, testOptions,
-		utils.RenderOptions{KustomizationPath: fmt.Sprintf("%s/operator/config/default", rootDir)})).NotTo(HaveOccurred())
+		utils.RenderOptions{Namespace: testOptions.GlobalHub.Namespace, KustomizationPath: fmt.Sprintf("%s/operator/config/default", rootDir)})).NotTo(HaveOccurred())
 
 	By("Deploying operand")
 	mcgh := &v1alpha4.MulticlusterGlobalHub{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      MghName,
-			Namespace: GlobalhubNamespace,
+			Namespace: testOptions.GlobalHub.Namespace,
 			Annotations: map[string]string{
 				constants.AnnotationMGHSkipAuth:                                  "true",
 				"mgh-scheduler-interval":                                         "minute",
@@ -329,17 +326,17 @@ func deployGlobalHub() {
 
 	// patch global hub operator to enable global resources
 	Eventually(func() error {
-		return patchGHDeployment(runtimeClient, GlobalhubNamespace, "multicluster-global-hub-operator")
+		return patchGHDeployment(runtimeClient, testOptions.GlobalHub.Namespace, "multicluster-global-hub-operator")
 	}, 1*time.Minute, 1*time.Second).Should(Succeed())
 
 	// make sure operator started and lease updated
 	Eventually(func() error {
-		err = checkDeployAvailable(runtimeClient, GlobalhubNamespace, "multicluster-global-hub-operator")
+		err = checkDeployAvailable(runtimeClient, testOptions.GlobalHub.Namespace, "multicluster-global-hub-operator")
 		if err != nil {
 			return err
 		}
 		updated, err := isLeaseUpdated("multicluster-global-hub-operator-lock",
-			GlobalhubNamespace, "multicluster-global-hub-operator", runtimeClient)
+			testOptions.GlobalHub.Namespace, "multicluster-global-hub-operator", runtimeClient)
 		if err != nil {
 			return err
 		}
@@ -361,7 +358,7 @@ func deployGlobalHub() {
 	components["multicluster-global-hub-grafana"] = 0
 	Eventually(func() error {
 		for name := range components {
-			err := checkDeployAvailable(runtimeClient, GlobalhubNamespace, name)
+			err := checkDeployAvailable(runtimeClient, testOptions.GlobalHub.Namespace, name)
 			if err != nil {
 				return err
 			}
@@ -497,7 +494,7 @@ func checkDeployAvailable(runtimeClient client.Client, namespace, name string) e
 		return nil
 	}
 	for _, container := range deployment.Spec.Template.Spec.Containers {
-		fmt.Printf("deployment image: %s/%s: %s\n", deployment.Name, container.Name, container.Image)
+		fmt.Printf("deployment image: %s/%s/%s: %s\n", namespace, deployment.Name, container.Name, container.Image)
 	}
 	return fmt.Errorf("deployment: %s is not ready", deployment.Name)
 }
@@ -505,7 +502,7 @@ func checkDeployAvailable(runtimeClient client.Client, namespace, name string) e
 func checkComponentsAvailableAndPhase(runtimeClient client.Client) error {
 	mgh := &v1alpha4.MulticlusterGlobalHub{}
 	err := runtimeClient.Get(ctx, client.ObjectKey{
-		Namespace: GlobalhubNamespace,
+		Namespace: testOptions.GlobalHub.Namespace,
 		Name:      MghName,
 	}, mgh)
 	if err != nil {

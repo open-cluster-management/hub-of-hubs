@@ -15,9 +15,6 @@ POSTGRES_KUBECONFIG="${CONFIG_DIR}/hub1"
 
 export ISBYO="true"
 
-# CleanUp globalhub
-bash "$CURRENT_DIR/e2e_clean_globalhub.sh"
-
 target_namespace=${TARGET_NAMESPACE:-"multicluster-global-hub"}
 
 ######################################### Generate Storage Secret ###################################################
@@ -85,3 +82,5 @@ kubectl create secret generic "$transport_secret" -n "$target_namespace" --kubec
 echo "transport secret is ready in $target_namespace namespace!"
 ## run e2e
 bash "$CURRENT_DIR/e2e_run.sh" -f "e2e-test-localpolicy,e2e-test-grafana"
+
+UNSET ISBYO

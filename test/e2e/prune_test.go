@@ -21,7 +21,6 @@ import (
 
 	globalhubv1alpha4 "github.com/stolostron/multicluster-global-hub/operator/api/operator/v1alpha4"
 	"github.com/stolostron/multicluster-global-hub/pkg/constants"
-	"github.com/stolostron/multicluster-global-hub/pkg/utils"
 )
 
 const (
@@ -91,7 +90,7 @@ var _ = Describe("Delete the multiclusterglobalhub and prune resources", Label("
 		By("Check whether multiclusterglobalhub is exists")
 		mgh := &globalhubv1alpha4.MulticlusterGlobalHub{}
 		err := globalHubClient.Get(ctx, types.NamespacedName{
-			Namespace: utils.GetDefaultNamespace(),
+			Namespace: testOptions.GlobalHub.Namespace,
 			Name:      "multiclusterglobalhub",
 		}, mgh)
 		Expect(err).To(Succeed())
@@ -103,7 +102,7 @@ var _ = Describe("Delete the multiclusterglobalhub and prune resources", Label("
 		By("Check whether multiclusterglobalhub is deleted")
 		Eventually(func() error {
 			err = globalHubClient.Get(ctx, types.NamespacedName{
-				Namespace: utils.GetDefaultNamespace(),
+				Namespace: testOptions.GlobalHub.Namespace,
 				Name:      "multiclusterglobalhub",
 			}, mgh)
 			if errors.IsNotFound(err) {
