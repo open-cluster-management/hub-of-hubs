@@ -15,7 +15,6 @@ import (
 
 	"github.com/stolostron/multicluster-global-hub/operator/pkg/utils"
 	"github.com/stolostron/multicluster-global-hub/pkg/constants"
-	commonutils "github.com/stolostron/multicluster-global-hub/pkg/utils"
 )
 
 const (
@@ -33,10 +32,10 @@ const (
 var _ = Describe("The alert configmap should be created", Ordered, Label("e2e-test-grafana"), func() {
 	It("Merged alert configmap should be same as default configmap", func() {
 		Eventually(func() error {
-			defaultAlertConfigMap, err := testClients.KubeClient().CoreV1().ConfigMaps(GlobalhubNamespace).Get(ctx, defaultAlertName, metav1.GetOptions{})
+			defaultAlertConfigMap, err := testClients.KubeClient().CoreV1().ConfigMaps(testOptions.GlobalHub.Namespace).Get(ctx, defaultAlertName, metav1.GetOptions{})
 			Expect(err).ShouldNot(HaveOccurred())
 
-			mergedAlertConfigMap, err := testClients.KubeClient().CoreV1().ConfigMaps(GlobalhubNamespace).Get(ctx, mergedAlertName, metav1.GetOptions{})
+			mergedAlertConfigMap, err := testClients.KubeClient().CoreV1().ConfigMaps(testOptions.GlobalHub.Namespace).Get(ctx, mergedAlertName, metav1.GetOptions{})
 			Expect(err).ShouldNot(HaveOccurred())
 
 			equal, err := utils.IsAlertGPCcountEqual([]byte(defaultAlertConfigMap.Data[alertConfigMapKey]), []byte(mergedAlertConfigMap.Data[alertConfigMapKey]))
@@ -54,7 +53,7 @@ var _ = Describe("The alert configmap should be created", Ordered, Label("e2e-te
 	It("Merged alert configmap should merged default and custom configmap", func() {
 		customConfig := &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace: GlobalhubNamespace,
+				Namespace: testOptions.GlobalHub.Namespace,
 				Name:      constants.CustomAlertName,
 			},
 			Data: map[string]string{
@@ -83,17 +82,17 @@ policies:
 			},
 		}
 
-		_, err := testClients.KubeClient().CoreV1().ConfigMaps(GlobalhubNamespace).Create(ctx, customConfig, metav1.CreateOptions{})
+		_, err := testClients.KubeClient().CoreV1().ConfigMaps(testOptions.GlobalHub.Namespace).Create(ctx, customConfig, metav1.CreateOptions{})
 		Expect(err).ShouldNot(HaveOccurred())
 
 		Eventually(func() error {
-			defaultAlertConfigMap, err := testClients.KubeClient().CoreV1().ConfigMaps(GlobalhubNamespace).Get(ctx, defaultAlertName, metav1.GetOptions{})
+			defaultAlertConfigMap, err := testClients.KubeClient().CoreV1().ConfigMaps(testOptions.GlobalHub.Namespace).Get(ctx, defaultAlertName, metav1.GetOptions{})
 			Expect(err).ShouldNot(HaveOccurred())
 
-			customAlertConfigMap, err := testClients.KubeClient().CoreV1().ConfigMaps(GlobalhubNamespace).Get(ctx, constants.CustomAlertName, metav1.GetOptions{})
+			customAlertConfigMap, err := testClients.KubeClient().CoreV1().ConfigMaps(testOptions.GlobalHub.Namespace).Get(ctx, constants.CustomAlertName, metav1.GetOptions{})
 			Expect(err).ShouldNot(HaveOccurred())
 
-			mergedAlertConfigMap, err := testClients.KubeClient().CoreV1().ConfigMaps(GlobalhubNamespace).Get(ctx, mergedAlertName, metav1.GetOptions{})
+			mergedAlertConfigMap, err := testClients.KubeClient().CoreV1().ConfigMaps(testOptions.GlobalHub.Namespace).Get(ctx, mergedAlertName, metav1.GetOptions{})
 			Expect(err).ShouldNot(HaveOccurred())
 
 			dg, dp, dc, err := utils.GetAlertGPCcount([]byte(defaultAlertConfigMap.Data[alertConfigMapKey]))
@@ -112,14 +111,14 @@ policies:
 				defaultAlertConfigMap.Data[alertConfigMapKey], customAlertConfigMap.Data, mergedAlertConfigMap.Data)
 		}, 2*time.Minute, 1*time.Second).ShouldNot(HaveOccurred())
 
-		err = testClients.KubeClient().CoreV1().ConfigMaps(GlobalhubNamespace).Delete(ctx, constants.CustomAlertName, metav1.DeleteOptions{})
+		err = testClients.KubeClient().CoreV1().ConfigMaps(testOptions.GlobalHub.Namespace).Delete(ctx, constants.CustomAlertName, metav1.DeleteOptions{})
 		Expect(err).ShouldNot(HaveOccurred())
 
 		Eventually(func() error {
-			defaultAlertConfigMap, err := testClients.KubeClient().CoreV1().ConfigMaps(GlobalhubNamespace).Get(ctx, defaultAlertName, metav1.GetOptions{})
+			defaultAlertConfigMap, err := testClients.KubeClient().CoreV1().ConfigMaps(testOptions.GlobalHub.Namespace).Get(ctx, defaultAlertName, metav1.GetOptions{})
 			Expect(err).ShouldNot(HaveOccurred())
 
-			mergedAlertConfigMap, err := testClients.KubeClient().CoreV1().ConfigMaps(GlobalhubNamespace).Get(ctx, mergedAlertName, metav1.GetOptions{})
+			mergedAlertConfigMap, err := testClients.KubeClient().CoreV1().ConfigMaps(testOptions.GlobalHub.Namespace).Get(ctx, mergedAlertName, metav1.GetOptions{})
 			Expect(err).ShouldNot(HaveOccurred())
 
 			equal, err := utils.IsAlertGPCcountEqual([]byte(defaultAlertConfigMap.Data[alertConfigMapKey]), []byte(mergedAlertConfigMap.Data[alertConfigMapKey]))
@@ -138,7 +137,7 @@ policies:
 	It("Merged alert configmap should be same as default when custom alert is invalid", func() {
 		customConfig := &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace: GlobalhubNamespace,
+				Namespace: testOptions.GlobalHub.Namespace,
 				Name:      constants.CustomAlertName,
 			},
 			Data: map[string]string{
@@ -152,14 +151,14 @@ policies:
 			},
 		}
 
-		_, err := testClients.KubeClient().CoreV1().ConfigMaps(GlobalhubNamespace).Create(ctx, customConfig, metav1.CreateOptions{})
+		_, err := testClients.KubeClient().CoreV1().ConfigMaps(testOptions.GlobalHub.Namespace).Create(ctx, customConfig, metav1.CreateOptions{})
 		Expect(err).ShouldNot(HaveOccurred())
 
 		Eventually(func() error {
-			defaultAlertConfigMap, err := testClients.KubeClient().CoreV1().ConfigMaps(GlobalhubNamespace).Get(ctx, defaultAlertName, metav1.GetOptions{})
+			defaultAlertConfigMap, err := testClients.KubeClient().CoreV1().ConfigMaps(testOptions.GlobalHub.Namespace).Get(ctx, defaultAlertName, metav1.GetOptions{})
 			Expect(err).ShouldNot(HaveOccurred())
 
-			mergedAlertConfigMap, err := testClients.KubeClient().CoreV1().ConfigMaps(GlobalhubNamespace).Get(ctx, mergedAlertName, metav1.GetOptions{})
+			mergedAlertConfigMap, err := testClients.KubeClient().CoreV1().ConfigMaps(testOptions.GlobalHub.Namespace).Get(ctx, mergedAlertName, metav1.GetOptions{})
 			Expect(err).ShouldNot(HaveOccurred())
 			equal, err := utils.IsAlertGPCcountEqual([]byte(defaultAlertConfigMap.Data[alertConfigMapKey]), []byte(mergedAlertConfigMap.Data[alertConfigMapKey]))
 			if err != nil {
@@ -174,7 +173,7 @@ policies:
 				mergedAlertConfigMap.Data, defaultAlertConfigMap.Data[alertConfigMapKey])
 		}, 2*time.Minute, 1*time.Second).ShouldNot(HaveOccurred())
 
-		err = testClients.KubeClient().CoreV1().ConfigMaps(GlobalhubNamespace).Delete(ctx, constants.CustomAlertName, metav1.DeleteOptions{})
+		err = testClients.KubeClient().CoreV1().ConfigMaps(testOptions.GlobalHub.Namespace).Delete(ctx, constants.CustomAlertName, metav1.DeleteOptions{})
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 })
@@ -183,10 +182,10 @@ var _ = Describe("The grafana.ini should be created", Ordered, Label("e2e-test-g
 	It("Merged grafana.ini should be same as default configmap", func() {
 		ctx := context.Background()
 		Eventually(func() error {
-			defaultGrafanaIniSecret, err := testClients.KubeClient().CoreV1().Secrets(GlobalhubNamespace).Get(ctx, defaultGrafanaIniName, metav1.GetOptions{})
+			defaultGrafanaIniSecret, err := testClients.KubeClient().CoreV1().Secrets(testOptions.GlobalHub.Namespace).Get(ctx, defaultGrafanaIniName, metav1.GetOptions{})
 			Expect(err).ShouldNot(HaveOccurred())
 
-			mergedGrafanaIniSecret, err := testClients.KubeClient().CoreV1().Secrets(GlobalhubNamespace).Get(ctx, mergedGrafanaIniName, metav1.GetOptions{})
+			mergedGrafanaIniSecret, err := testClients.KubeClient().CoreV1().Secrets(testOptions.GlobalHub.Namespace).Get(ctx, mergedGrafanaIniName, metav1.GetOptions{})
 			Expect(err).ShouldNot(HaveOccurred())
 			if sectionCount(defaultGrafanaIniSecret.Data[grafanaIniKey]) != sectionCount(mergedGrafanaIniSecret.Data[grafanaIniKey]) {
 				return fmt.Errorf("Default grafana.ini is different with merged grafana.ini. Default grafana.ini : %v, merged grafana.ini: %v",
@@ -200,7 +199,7 @@ var _ = Describe("The grafana.ini should be created", Ordered, Label("e2e-test-g
 		ctx := context.Background()
 		customSecret := &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace: GlobalhubNamespace,
+				Namespace: testOptions.GlobalHub.Namespace,
 				Name:      constants.CustomGrafanaIniName,
 			},
 			Data: map[string][]byte{
@@ -217,14 +216,14 @@ var _ = Describe("The grafana.ini should be created", Ordered, Label("e2e-test-g
 `),
 			},
 		}
-		customSecret, err := testClients.KubeClient().CoreV1().Secrets(GlobalhubNamespace).Create(ctx, customSecret, metav1.CreateOptions{})
+		customSecret, err := testClients.KubeClient().CoreV1().Secrets(testOptions.GlobalHub.Namespace).Create(ctx, customSecret, metav1.CreateOptions{})
 		Expect(err).ShouldNot(HaveOccurred())
 
 		Eventually(func() error {
-			defaultGrafanaIniSecret, err := testClients.KubeClient().CoreV1().Secrets(GlobalhubNamespace).Get(ctx, defaultGrafanaIniName, metav1.GetOptions{})
+			defaultGrafanaIniSecret, err := testClients.KubeClient().CoreV1().Secrets(testOptions.GlobalHub.Namespace).Get(ctx, defaultGrafanaIniName, metav1.GetOptions{})
 			Expect(err).ShouldNot(HaveOccurred())
 
-			mergedGrafanaIniSecret, err := testClients.KubeClient().CoreV1().Secrets(GlobalhubNamespace).Get(ctx, mergedGrafanaIniName, metav1.GetOptions{})
+			mergedGrafanaIniSecret, err := testClients.KubeClient().CoreV1().Secrets(testOptions.GlobalHub.Namespace).Get(ctx, mergedGrafanaIniName, metav1.GetOptions{})
 			Expect(err).ShouldNot(HaveOccurred())
 			if (sectionCount(defaultGrafanaIniSecret.Data[grafanaIniKey]) + sectionCount(customSecret.Data[grafanaIniKey]) - 2) != sectionCount(mergedGrafanaIniSecret.Data[grafanaIniKey]) {
 				return fmt.Errorf("Default and custom grafana.ini secret is different with merged grafana.ini secret. Default : %v, custom: %v, merged: %v",
@@ -233,14 +232,14 @@ var _ = Describe("The grafana.ini should be created", Ordered, Label("e2e-test-g
 			return nil
 		}, 2*time.Minute, 1*time.Second).ShouldNot(HaveOccurred())
 
-		err = testClients.KubeClient().CoreV1().Secrets(GlobalhubNamespace).Delete(ctx, constants.CustomGrafanaIniName, metav1.DeleteOptions{})
+		err = testClients.KubeClient().CoreV1().Secrets(testOptions.GlobalHub.Namespace).Delete(ctx, constants.CustomGrafanaIniName, metav1.DeleteOptions{})
 		Expect(err).ShouldNot(HaveOccurred())
 
 		Eventually(func() error {
-			defaultGrafanaIniSecret, err := testClients.KubeClient().CoreV1().Secrets(GlobalhubNamespace).Get(ctx, defaultGrafanaIniName, metav1.GetOptions{})
+			defaultGrafanaIniSecret, err := testClients.KubeClient().CoreV1().Secrets(testOptions.GlobalHub.Namespace).Get(ctx, defaultGrafanaIniName, metav1.GetOptions{})
 			Expect(err).ShouldNot(HaveOccurred())
 
-			mergedGrafanaIniSecret, err := testClients.KubeClient().CoreV1().Secrets(GlobalhubNamespace).Get(ctx, mergedGrafanaIniName, metav1.GetOptions{})
+			mergedGrafanaIniSecret, err := testClients.KubeClient().CoreV1().Secrets(testOptions.GlobalHub.Namespace).Get(ctx, mergedGrafanaIniName, metav1.GetOptions{})
 			Expect(err).ShouldNot(HaveOccurred())
 
 			if sectionCount(defaultGrafanaIniSecret.Data[grafanaIniKey]) != sectionCount(mergedGrafanaIniSecret.Data[grafanaIniKey]) {
@@ -301,7 +300,7 @@ var _ = Describe("The grafana resources counts should be right", Ordered, Label(
 
 // getGrafanaResource return the resource number and error
 func getGrafanaResource(ctx context.Context, path string) (int, error) {
-	configNamespace := commonutils.GetDefaultNamespace()
+	configNamespace := testOptions.GlobalHub.Namespace
 
 	labelSelector := fmt.Sprintf("name=%s", grafanaDeploymentName)
 	var grafanaPod corev1.Pod
